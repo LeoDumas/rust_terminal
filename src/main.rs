@@ -1,4 +1,3 @@
-use std;
 mod utils;
 use crate::utils::clear_terminal;
 use std::io::{self, Write};
@@ -21,8 +20,7 @@ fn loop_user_input() -> io::Result<()> {
         let user_command = user_command.trim(); // Remove whitespace
 
         if user_command.is_empty() {
-            // If the user just pressed Enter, show the current directory
-            println!("");
+            // Do nothing
         } else if user_command == "exit" {
             // Allow the user to exit the loop
             println!("Exiting...");
