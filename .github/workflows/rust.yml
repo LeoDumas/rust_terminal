@@ -110,36 +110,27 @@ jobs:
     name: Create Release
     needs: [check, test, fmt, clippy, build]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-      - uses: actions/download-artifact@v2
-      - name: Upload Release Assets
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          for artifact in */rust_terminal-*; do
-            gh release upload ${GITHUB_REF#refs/tags/} "$artifact" --clobber
-          done
       - name: Generate Release Notes
         run: |
-          echo "# Release ${GITHUB_REF#refs/tags/}" > RELEASE_NOTES.md
+          echo "# Release ${{ github.ref_name }}" > RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
           echo "## Changes" >> RELEASE_NOTES.md
           git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s" >> RELEASE_NOTES.md
-      - name: Update Release with Notes
+        shell: bash
+      - uses: actions/download-artifact@v2
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ github.ref_name }}
+          files: |
+            */rust_terminal-*
+          body_path: RELEASE_NOTES.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release edit ${GITHUB_REF#refs/tags/} -F RELEASE_NOTES.md
